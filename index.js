@@ -2,7 +2,7 @@ const VK = require('vk-io')
 const CronJob = require('cron').CronJob
 require('dotenv').config()
 
-const { login, pass, owner_id, photo_id, message, startTime } = process.env
+const { login, pass, link, message, startTime } = process.env
 
 const vk = new VK({
   login,
@@ -10,16 +10,25 @@ const vk = new VK({
 })
 
 const auth = vk.auth.windows()
+let owner_id
+let photo_id
 
-auth.run()
-  .then(account => {
-    console.log('Authorised user:', account.user)
+try {
+  owner_id = link.match(/photo([-\d]+)/)[1]
+  photo_id = link.match(/photo[-\d]+_(\d+)/)[1]
 
-    new CronJob(startTime, () => {
-      writeComment(account.token)
-    }, null, true, 'Asia/Yekaterinburg')
-  })
-  .catch(error => console.error(error))
+  auth.run()
+    .then(account => {
+      console.log('Authorised user:', account.user)
+
+      new CronJob(startTime, () => {
+        writeComment(account.token)
+      }, null, true, 'Asia/Yekaterinburg')
+    })
+    .catch(error => console.error(error))
+} catch (err) {
+  console.log('Wrong photo link!')
+}
 
 const writeComment = access_token => {
   console.log('commenting!')
